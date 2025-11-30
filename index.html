@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AR11⁹⁹ Encoder/Decoder</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f8f9fa, #d1e7dd);
+    color: #333;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 700px;
+    margin: auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 2rem;
+    color: #0f5132;
+  }
+
+  label {
+    font-weight: bold;
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    margin: 10px 0 20px 0;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  button {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  button.encode { background: #0f5132; color: #fff; }
+  button.decode { background: #ffc107; color: #000; }
+  button.copy { background: #198754; color: #fff; }
+
+  button:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>AR11⁹⁹ Encoder/Decoder</h1>
+
+  <label for="inputText">Input Text / AR11⁹⁹:</label>
+  <textarea id="inputText" placeholder="Type text or AR11⁹⁹ string here..."></textarea>
+
+  <div class="buttons">
+    <button class="encode" onclick="encodeText()">Encode</button>
+    <button class="decode" onclick="decodeText()">Decode</button>
+    <button class="copy" onclick="copyOutput()">Copy Output</button>
+  </div>
+
+  <label for="outputText">Output:</label>
+  <textarea id="outputText" readonly placeholder="Encoded / Decoded output will appear here..."></textarea>
+</div>
+
+<script>
+const AR11_ALPHABET = `=%@*"=\\_-\<+;#.("{/\\°}2987178¡88728-ik2981jksoqp.s.-sàè2èùqèoqjzbvaxrwfevdyhwmosòe+wèelmx÷\`71√√2®™^©✓©™✓]£<>\0∆~982=\`==¥…\`×\`÷`;
+
+// Convert string to binary (supports Unicode)
+function stringToBinary(str) {
+  const encoder = new TextEncoder(); // UTF-8 support
+  return Array.from(encoder.encode(str))
+    .map(b => b.toString(2).padStart(8, '0'))
+    .join('');
+}
+
+// Convert binary to string (supports Unicode)
+function binaryToString(bin) {
+  const bytes = [];
+  for (let i = 0; i < bin.length; i += 8) {
+    let byte = bin.slice(i, i+8);
+    if (byte.length === 8) bytes.push(parseInt(byte, 2));
+  }
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+// Encode AR11⁹⁹
+function encodeAR11(input) {
+  const bin = stringToBinary(input);
+  const alphabetLength = AR11_ALPHABET.length;
+  const bitsPerChar = Math.floor(Math.log2(alphabetLength));
+  let output = '';
+  for (let i = 0; i < bin.length; i += bitsPerChar) {
+    let chunk = bin.slice(i, i+bitsPerChar).padEnd(bitsPerChar,'0');
+    let index = parseInt(chunk, 2);
+    output += AR11_ALPHABET[index % alphabetLength];
+  }
+  return output;
+}
+
+// Decode AR11⁹⁹
+function decodeAR11(input) {
+  const alphabetLength = AR11_ALPHABET.length;
+  const bitsPerChar = Math.floor(Math.log2(alphabetLength));
+  let bin = '';
+  for (let c of input) {
+    let index = AR11_ALPHABET.indexOf(c);
+    if (index === -1) throw new Error(`Character not in AR11⁹⁹ alphabet: ${c}`);
+    bin += index.toString(2).padStart(bitsPerChar,'0');
+  }
+  return binaryToString(bin);
+}
+
+// Button actions
+function encodeText() {
+  const text = document.getElementById('inputText').value;
+  document.getElementById('outputText').value = encodeAR11(text);
+}
+
+function decodeText() {
+  const text = document.getElementById('inputText').value;
+  try {
+    document.getElementById('outputText').value = decodeAR11(text);
+  } catch(e) {
+    alert(e.message);
+  }
+}
+
+function copyOutput() {
+  const output = document.getElementById('outputText');
+  output.select();
+  navigator.clipboard.writeText(output.value).then(() => {
+    alert('Output copied to clipboard!');
+  });
+}
+</script>
+
+</body>
+</html>
