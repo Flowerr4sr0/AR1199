@@ -1,160 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctypehtml>
+<html lang=en>
 <head>
-<meta charset="UTF-8">
+<meta charset=UTF-8>
 <title>AR11⁹⁹ Encoder/Decoder</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8f9fa, #d1e7dd);
-    color: #333;
-    padding: 20px;
-  }
-
-  .container {
-    max-width: 700px;
-    margin: auto;
-    background: #fff;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  }
-
-  h1 {
-    text-align: center;
-    margin-bottom: 25px;
-    font-size: 2rem;
-    color: #0f5132;
-  }
-
-  label {
-    font-weight: bold;
-  }
-
-  textarea {
-    width: 100%;
-    height: 120px;
-    margin: 10px 0 20px 0;
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    resize: vertical;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  button {
-    flex: 1;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  button.encode { background: #0f5132; color: #fff; }
-  button.decode { background: #ffc107; color: #000; }
-  button.copy { background: #198754; color: #fff; }
-
-  button:hover { opacity: 0.85; }
-</style>
+<style>body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#f8f9fa,#d1e7dd);color:#333;padding:20px}.container{max-width:750px;margin:auto;background:#fff;padding:25px;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,.15)}h1{text-align:center;margin-bottom:25px;font-size:2rem;color:#0f5132}label{font-weight:700}#highlighted,textarea{width:100%;font-size:16px;padding:10px;border-radius:10px;border:1px solid #ccc;resize:vertical;min-height:120px;box-sizing:border-box}#highlighted{white-space:pre-wrap;word-wrap:break-word;margin-top:-130px;pointer-events:none;position:absolute;color:#000;background:0 0}.valid{color:green;font-weight:700}.invalid{color:red;opacity:.6}.buttons{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:20px}button{flex:1;padding:12px;font-size:16px;border-radius:10px;border:none;cursor:pointer;transition:all .2s ease}button.encode{background:#0f5132;color:#fff}button.decode{background:#ffc107;color:#000}button.safe{background:#198754;color:#fff}button.copy{background:#0d6efd;color:#fff}button:hover{opacity:.85}.textarea-container{position:relative}#toast-container{position:fixed;bottom:20px;right:20px;z-index:9999}.toast{background:rgba(0,0,0,.85);color:#fff;padding:12px 20px;border-radius:8px;margin-top:10px;animation:fadein .5s,fadeout .5s 3s}@keyframes fadein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeout{from{opacity:1}to{opacity:0;transform:translateY(-20px)}}</style>
 </head>
 <body>
-
-<div class="container">
-  <h1>AR11⁹⁹ Encoder/Decoder</h1>
-
-  <label for="inputText">Input Text / AR11⁹⁹:</label>
-  <textarea id="inputText" placeholder="Type text or AR11⁹⁹ string here..."></textarea>
-
-  <div class="buttons">
-    <button class="encode" onclick="encodeText()">Encode</button>
-    <button class="decode" onclick="decodeText()">Decode</button>
-    <button class="copy" onclick="copyOutput()">Copy Output</button>
-  </div>
-
-  <label for="outputText">Output:</label>
-  <textarea id="outputText" readonly placeholder="Encoded / Decoded output will appear here..."></textarea>
+<div class=container>
+<h1>AR11⁹⁹ Encoder/Decoder</h1>
+<label for=inputText>Input Text / AR11⁹⁹:</label>
+<div class=textarea-container>
+<textarea id=inputText placeholder="Type text or AR11⁹⁹ string here..."oninput=highlightChars()></textarea>
+<pre id=highlighted></pre>
 </div>
-
+<div class=buttons>
+<button class=encode onclick=encodeTextNormal()>Encode</button>
+<button class=safe onclick=encodeTextSafe()>Encode Safe</button>
+<button class=decode onclick=decodeTextNormal()>Decode</button>
+<button class=safe onclick=decodeTextSafe()>Decode Safe</button>
+<button class=copy onclick=copyOutput()>Copy</button>
+</div>
+<label for=outputText>Output:</label>
+<textarea id=outputText placeholder="Output will appear here..."readonly></textarea>
+</div>
+<div id=toast-container></div>
 <script>
-const AR11_ALPHABET = `=%@*"=\\_-\<+;#.("{/\\°}2987178¡88728-ik2981jksoqp.s.-sàè2èùqèoqjzbvaxrwfevdyhwmosòe+wèelmx÷\`71√√2®™^©✓©™✓]£<>\0∆~982=\`==¥…\`×\`÷`;
-
-// Convert string to binary (supports Unicode)
-function stringToBinary(str) {
-  const encoder = new TextEncoder(); // UTF-8 support
-  return Array.from(encoder.encode(str))
-    .map(b => b.toString(2).padStart(8, '0'))
-    .join('');
-}
-
-// Convert binary to string (supports Unicode)
-function binaryToString(bin) {
-  const bytes = [];
-  for (let i = 0; i < bin.length; i += 8) {
-    let byte = bin.slice(i, i+8);
-    if (byte.length === 8) bytes.push(parseInt(byte, 2));
-  }
-  return new TextDecoder().decode(new Uint8Array(bytes));
-}
-
-// Encode AR11⁹⁹
-function encodeAR11(input) {
-  const bin = stringToBinary(input);
-  const alphabetLength = AR11_ALPHABET.length;
-  const bitsPerChar = Math.floor(Math.log2(alphabetLength));
-  let output = '';
-  for (let i = 0; i < bin.length; i += bitsPerChar) {
-    let chunk = bin.slice(i, i+bitsPerChar).padEnd(bitsPerChar,'0');
-    let index = parseInt(chunk, 2);
-    output += AR11_ALPHABET[index % alphabetLength];
-  }
-  return output;
-}
-
-// Decode AR11⁹⁹
-function decodeAR11(input) {
-  const alphabetLength = AR11_ALPHABET.length;
-  const bitsPerChar = Math.floor(Math.log2(alphabetLength));
-  let bin = '';
-  for (let c of input) {
-    let index = AR11_ALPHABET.indexOf(c);
-    if (index === -1) throw new Error(`Character not in AR11⁹⁹ alphabet: ${c}`);
-    bin += index.toString(2).padStart(bitsPerChar,'0');
-  }
-  return binaryToString(bin);
-}
-
-// Button actions
-function encodeText() {
-  const text = document.getElementById('inputText').value;
-  document.getElementById('outputText').value = encodeAR11(text);
-}
-
-function decodeText() {
-  const text = document.getElementById('inputText').value;
-  try {
-    document.getElementById('outputText').value = decodeAR11(text);
-  } catch(e) {
-    alert(e.message);
-  }
-}
-
-function copyOutput() {
-  const output = document.getElementById('outputText');
-  output.select();
-  navigator.clipboard.writeText(output.value).then(() => {
-    alert('Output copied to clipboard!');
-  });
-}
-</script>
-
-</body>
-</html>
+const AR11_ALPHABET=`=%@*"=\\_-\<+;#.("{/\\°}2987178¡88728-ik2981jksoqp.s.-sàè2èùqèoqjzbvaxrwfevdyhwmosòe+wèelmx÷\`71√√2®™^©✓©™✓]£<>\0∆~982=\`==¥…\`×\`÷`;
+function stringToBinary(str){const encoder=new TextEncoder();return Array.from(encoder.encode(str)).map(b=>b.toString(2).padStart(8,'0')).join('')}
+function binaryToString(bin){const bytes=[];for(let i=0;i<bin.length;i+=8){const byte=bin.slice(i,i+8);if(byte.length===8)bytes.push(parseInt(byte,2))}return new TextDecoder().decode(new Uint8Array(bytes))}
+function encodeAR11(input){const bin=stringToBinary(input),alphabetLength=AR11_ALPHABET.length,bitsPerChar=Math.floor(Math.log2(alphabetLength));let output='';for(let i=0;i<bin.length;i+=bitsPerChar){const chunk=bin.slice(i,i+bitsPerChar).padEnd(bitsPerChar,'0');const index=parseInt(chunk,2);output+=AR11_ALPHABET[index%alphabetLength]}return output}
+function encodeAR11Safe(input){const filtered=Array.from(input).filter(c=>c>=' '&&c<='~').join('');if(filtered.length<input.length) showToast('Some invalid characters were removed in Safe Encode');return encodeAR11(filtered)}
+function decodeAR11(input){const alphabetLength=AR11_ALPHABET.length,bitsPerChar=Math.floor(Math.log2(alphabetLength));let bin='';for(const c of input){const index=AR11_ALPHABET.indexOf(c);if(index===-1)throw new Error(`Character not in AR11⁹⁹ alphabet: ${c}`);bin+=index.toString(2).padStart(bitsPerChar,'0')}return binaryToString(bin)}
+function decodeAR11Safe(input){const alphabetLength=AR11_ALPHABET.length,bitsPerChar=Math.floor(Math.log2(alphabetLength));let bin='',skipped=false;for(const c of input){const index=AR11_ALPHABET.indexOf(c);if(index===-1){skipped=true;continue}bin+=index.toString(2).padStart(bitsPerChar,'0')}if(skipped) showToast('Some invalid characters were ignored in Safe Decode');return binaryToString(bin)}
+function highlightChars(){const input=document.getElementById('inputText').value;const highlighted=Array.from(input).map(c=>AR11_ALPHABET.includes(c)?`<span class="valid">${c}</span>`:`<span class="invalid">${c}</span>`).join('');document.getElementById('highlighted').innerHTML=highlighted}
+function encodeTextNormal(){document.getElementById('outputText').value=encodeAR11(document.getElementById('inputText').value)}
+function encodeTextSafe(){document.getElementById('outputText').value=encodeAR11Safe(document.getElementById('inputText').value)}
+function decodeTextNormal(){try{document.getElementById('outputText').value=decodeAR11(document.getElementById('inputText').value)}catch(e){showToast(e.message)}}
+function decodeTextSafe(){document.getElementById('outputText').value=decodeAR11Safe(document.getElementById('inputText').value)}
+function copyOutput(){const output=document.getElementById('outputText');output.select();navigator.clipboard.writeText(output.value).then(()=>showToast('Output copied!'))}
+function showToast(message){const container=document.getElementById('toast-container');const toast=document.createElement('div');toast.className='toast';toast.textContent=message;container.appendChild(toast);setTimeout(()=>{toast.remove()},4000)}
+  </script>
+  
